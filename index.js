@@ -14,10 +14,16 @@ import rateLimit from 'express-rate-limit';
 import fs from 'fs';
 import puppeteer from 'puppeteer';
 import { v4 as uuidv4 } from 'uuid';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getFirestore, collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref as dbRef, set, get, child } from 'firebase/database';
+
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
 //log
 // Add validation
 if (!process.env.OPENAI_API_KEY) {
@@ -108,6 +114,28 @@ app.get('/api/optimize-resume/limit-status', resumeLimiter, (req, res) => {
     ).toISOString(),
   });
 });
+
+// Add Firebase configuration and initialization
+const firebaseConfig = {
+  apiKey: "AIzaSyDtZ-pIMQNWwczkQM8TWH9AEsSm2bZIpEc",
+  authDomain: "cvzex-26398.firebaseapp.com",
+  projectId: "cvzex-26398",
+  databaseURL: "https://cvzex-26398-default-rtdb.firebaseio.com",
+  storageBucket: "cvzex-26398.appspot.com",
+  messagingSenderId: "231565216123",
+  appId: "1:231565216123:web:c3129e84038af0eb0fd5de",
+  measurementId: "G-NW39XRY1S0"
+};
+
+// Initialize Firebase with Realtime Database
+let firebaseApp, database;
+try {
+  firebaseApp = initializeApp(firebaseConfig);
+  database = getDatabase(firebaseApp);
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+}
+
 // Store job applications and returns in memory (replace with database in production)
 const jobApplications = new Map();
 const returns = new Map();
@@ -630,89 +658,105 @@ app.post('/api/optimize-resume', async (req, res) => {
       }
 
       try {
-        // Get the file from either 'resume' or 'file' field
         const uploadedFile = req.files?.resume?.[0] || req.files?.file?.[0];
+        const userId = req.body.userId;
+
+        if (!userId) {
+          return res.status(400).json({
+            error: 'User ID is required'
+          });
+        }
 
         // Input validation
-        if ((!req.body.jobUrl && !req.body.jobDescription) || !uploadedFile) {
+        if (!uploadedFile) {
           return res.status(400).json({
-            error: 'Both job details (URL or description) and resume file are required',
-            details: {
-              jobDetails: (!req.body.jobUrl && !req.body.jobDescription) ? 'Job URL or description is required' : null,
-              resume: !uploadedFile ? 'Resume file is required' : null,
-            }
+            error: 'Resume file is required'
           });
         }
 
         const optimizeId = Date.now().toString();
 
-        // Create resumes directory if it doesn't exist
-        const resumesDir = path.join(__dirname, 'public', 'resumes');
-        await fs.promises.mkdir(resumesDir, { recursive: true });
-
-        // Initialize optimization record
-        resumeOptimizations.set(optimizeId, {
+        // Store the resume data as base64 in Realtime Database
+        // Remove undefined values and provide defaults
+        const resumeData = {
           status: 'processing',
-          jobUrl: req.body.jobUrl,
-          jobDescription: req.body.jobDescription,
-          startedAt: new Date(),
-          completedAt: null,
-          optimizedResume: null,
-          pdfUrl: null,
+          jobUrl: req.body.jobUrl || null, // Convert undefined to null
+          jobDescription: req.body.jobDescription || null, // Convert undefined to null
+          startedAt: new Date().toISOString(),
+          resumeContent: uploadedFile.buffer.toString('base64'),
           error: null,
           progress: 0
-        });
+        };
+
+        // Save to Realtime Database
+        try {
+          await set(dbRef(database, `optimizations/${userId}/${optimizeId}`), resumeData);
+        } catch (dbError) {
+          console.error('Database operation failed:', dbError);
+          return res.status(500).json({
+            error: 'Failed to save optimization data',
+            details: dbError.message
+          });
+        }
 
         // Process optimization asynchronously
         (async () => {
           try {
-            // Update progress stages
-            const updateProgress = (progress) => {
-              const optimization = resumeOptimizations.get(optimizeId);
-              if (optimization) {
-                resumeOptimizations.set(optimizeId, { ...optimization, progress });
+            const updateProgress = async (progress) => {
+              try {
+                await set(dbRef(database, `optimizations/${userId}/${optimizeId}/progress`), progress);
+              } catch (error) {
+                console.error('Error updating progress:', error);
               }
             };
 
-            updateProgress(20);
-            // Get job description text either from URL or direct input
-            const jobDescriptionText = req.body.jobUrl 
-              ? await extractJobDescription(req.body.jobUrl)
-              : req.body.jobDescription;
+            await updateProgress(20);
+            const jobDescriptionText = resumeData.jobUrl 
+              ? await extractJobDescription(resumeData.jobUrl)
+              : resumeData.jobDescription;
             
-            updateProgress(40);
+            if (!jobDescriptionText) {
+              throw new Error('No job description provided');
+            }
+            
+            await updateProgress(40);
             const resumeText = await extractResumeText(uploadedFile.buffer);
             
-            updateProgress(60);
-            const optimized = await generateOptimizedResume(jobDescriptionText, resumeText);
+            await updateProgress(60);
+            const optimized = await generateOptimizedResume(jobDescriptionText, resumeText, userId);
             
-            updateProgress(80);
+            await updateProgress(80);
             const pdfBuffer = await generateResumePDF(optimized);
 
-            // Save PDF to public folder
-            const pdfFileName = `resume_${optimizeId}.pdf`;
-            const pdfPath = path.join(resumesDir, pdfFileName);
-            await fs.promises.writeFile(pdfPath, pdfBuffer);
-
-            // Update final status
-            resumeOptimizations.set(optimizeId, {
+            // Store the optimized PDF in the database as base64
+            const completedData = {
               status: 'completed',
-              jobUrl: req.body.jobUrl,
-              jobDescription: req.body.jobDescription,
-              optimizedResume: optimized,
-              pdfUrl: `/resumes/${pdfFileName}`,
-              startedAt: resumeOptimizations.get(optimizeId).startedAt,
-              completedAt: new Date(),
+              jobUrl: resumeData.jobUrl,
+              jobDescription: resumeData.jobDescription,
+              optimizedResume: pdfBuffer.toString('base64'),
+              originalResume: resumeData.resumeContent,
+              startedAt: resumeData.startedAt,
+              completedAt: new Date().toISOString(),
               progress: 100
-            });
+            };
+
+            await set(dbRef(database, `optimizations/${userId}/${optimizeId}`), completedData);
+
           } catch (error) {
             console.error('Optimization processing error:', error);
-            resumeOptimizations.set(optimizeId, {
-              ...resumeOptimizations.get(optimizeId),
+            const failedData = {
               status: 'failed',
               error: error.message,
-              completedAt: new Date()
-            });
+              completedAt: new Date().toISOString(),
+              jobUrl: resumeData.jobUrl,
+              jobDescription: resumeData.jobDescription,
+              originalResume: resumeData.resumeContent,
+              startedAt: resumeData.startedAt,
+              progress: 0,
+              userId: userId
+            };
+            
+            await set(dbRef(database, `optimizations/${userId}/${optimizeId}`), failedData);
           }
         })();
 
@@ -741,16 +785,42 @@ app.post('/api/optimize-resume', async (req, res) => {
   }
 });
 
-// Get Optimization Status
-app.get('/api/optimize-resume/:id', (req, res) => {
-  const optimization = resumeOptimizations.get(req.params.id);
-  if (!optimization)
-    return res.status(404).json({ error: 'Optimization not found' });
-  res.json(optimization);
+// Get Optimization Status endpoint
+app.get('/api/optimize-resume/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const dbSnapshot = await get(child(dbRef(database), `optimizations/${userId}/${id}`));
+    
+    if (!dbSnapshot.exists()) {
+      return res.status(404).json({ error: 'Optimization not found' });
+    }
+
+    const data = dbSnapshot.val();
+    res.json({
+      status: data.status,
+      progress: data.progress,
+      completedAt: data.completedAt,
+      error: data.error
+    });
+
+  } catch (error) {
+    console.error('Error fetching optimization status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-async function generateOptimizedResume(jobDescription, resumeText) {
+async function generateOptimizedResume(jobDescription, resumeText, userId) {
   try {
+    if (!userId) {
+      throw new Error('User ID is required for resume optimization');
+    }
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
@@ -775,16 +845,19 @@ async function generateOptimizedResume(jobDescription, resumeText) {
       ],
       temperature: 0.7,
       max_tokens: 2000,
+      user: userId // Include userId in the API call
     });
 
     const optimizedContent = response.choices[0].message.content;
 
-    // Wrap the optimized content in the specified HTML structure
-    return `
+    // Generate the complete HTML document with userId embedded in multiple places
+    const completeHtml = `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-user-id="${userId}">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="userId" content="${userId}">
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -853,14 +926,20 @@ async function generateOptimizedResume(jobDescription, resumeText) {
         }
     </style>
 </head>
-<body>
-    ${optimizedContent}
+<body data-user-id="${userId}">
+    <div id="resume-content" 
+         class="resume-container" 
+         data-user-id="${userId}"
+         data-timestamp="${Date.now()}">
+        ${optimizedContent}
+    </div>
 </body>
-</html>
-    `;
+</html>`;
+
+    return completeHtml;
   } catch (error) {
     console.error('Error generating optimized resume:', error);
-    throw new Error('Failed to optimize resume: ' + error.message);
+    throw new Error(`Failed to optimize resume: ${error.message}`);
   }
 }
 

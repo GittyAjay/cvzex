@@ -22,7 +22,7 @@
                             Email
                         </span>
                     </label>
-                    <input type="email" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
+                    <input type="email" id="loginEmail" name="email" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
                 </div>
                 
                 <div>
@@ -35,7 +35,7 @@
                         </span>
                     </label>
                     <div class="relative">
-                        <input type="password" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
+                        <input type="password" id="loginPassword" name="password" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
                         <button type="button" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600">Show</button>
                     </div>
                     <a href="#" class="block text-purple-600 hover:text-purple-700 mt-2">Forgot password?</a>
@@ -67,7 +67,7 @@
                             Email
                         </span>
                     </label>
-                    <input type="email" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
+                    <input type="email" id="signupEmail" name="email" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
                 </div>
                 
                 <div>
@@ -80,7 +80,7 @@
                         </span>
                     </label>
                     <div class="relative">
-                        <input type="password" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
+                        <input type="password" id="signupPassword" name="password" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
                         <button type="button" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600">Show</button>
                     </div>
                 </div>
@@ -131,12 +131,20 @@
 
             <!-- Auth Buttons -->
             <div class="fixed bottom-8 left-6 w-52 space-y-3">
-                <button id="loginBtn" class="w-full py-2.5 px-4 border border-gray-200 rounded-lg text-gray-700 bg-white hover:bg-gray-50">
-                    Login
-                </button>
-                <button id="signupBtn" class="w-full py-2.5 px-4 bg-purple-700 text-white rounded-lg hover:bg-purple-800">
-                    Signup
-                </button>
+                <div id="userInfo" class="hidden">
+                    <p class="text-sm text-gray-600 mb-2"></p>
+                    <button id="signOutBtn" class="w-full py-2.5 px-4 border border-gray-200 rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                        Sign Out
+                    </button>
+                </div>
+                <div id="authButtons">
+                    <button id="loginBtn" class="w-full py-2.5 px-4 border border-gray-200 rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                        Login
+                    </button>
+                    <button id="signupBtn" class="w-full py-2.5 px-4 bg-purple-700 text-white rounded-lg hover:bg-purple-800 mt-3">
+                        Signup
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -172,87 +180,178 @@
     </div>
 
     <!-- Add this script before closing body tag -->
-    <script>
-        // Get modal elements
-        const loginModal = document.getElementById('loginModal');
-        const signupModal = document.getElementById('signupModal');
-        const loginButton = document.getElementById('loginBtn');
-        const signupButton = document.getElementById('signupBtn');
-        const switchToLoginLink = document.getElementById('switchToLogin');
-        const createAccountLink = document.querySelector('a[href="#"].text-gray-600');
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { 
+        getAuth, 
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword,
+        onAuthStateChanged,
+        signOut 
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Show login modal when login button is clicked
-        loginButton.addEventListener('click', () => {
-            loginModal.classList.remove('hidden');
+      // Your Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDtZ-pIMQNWwczkQM8TWH9AEsSm2bZIpEc",
+        authDomain: "cvzex-26398.firebaseapp.com",
+        projectId: "cvzex-26398",
+        storageBucket: "cvzex-26398.firebasestorage.app",
+        messagingSenderId: "231565216123",
+        appId: "1:231565216123:web:c3129e84038af0eb0fd5de",
+        measurementId: "G-NW39XRY1S0"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+
+      // Store current user ID
+      let currentUserId = null;
+
+      // Get modal elements
+      const loginModal = document.getElementById('loginModal');
+      const signupModal = document.getElementById('signupModal');
+      const loginButton = document.getElementById('loginBtn');
+      const signupButton = document.getElementById('signupBtn');
+      const switchToLoginLink = document.getElementById('switchToLogin');
+      const createAccountLink = document.querySelector('a[href="#"]:not(#switchToLogin)');
+
+      // Show login modal when login button is clicked
+      loginButton.addEventListener('click', () => {
+        if (!auth.currentUser) {
+          loginModal.classList.remove('hidden');
+        }
+      });
+
+      // Show signup modal when signup button is clicked
+      signupButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        signupModal.classList.remove('hidden');
+        loginModal.classList.add('hidden'); // Hide login modal if it's open
+      });
+
+      // Switch between modals
+      switchToLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        signupModal.classList.add('hidden');
+        loginModal.classList.remove('hidden');
+      });
+
+      createAccountLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginModal.classList.add('hidden');
+        signupModal.classList.remove('hidden');
+      });
+
+      // Close modals when clicking outside
+      [loginModal, signupModal].forEach(modal => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.add('hidden');
+          }
         });
+      });
 
-        // Show signup modal when signup button is clicked
-        signupButton.addEventListener('click', () => {
-            signupModal.classList.remove('hidden');
-        });
-
-        // Close modals when clicking outside
-        [loginModal, signupModal].forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.add('hidden');
-                }
-            });
-        });
-
-        // Switch between modals
-        switchToLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            signupModal.classList.add('hidden');
-            loginModal.classList.remove('hidden');
-        });
-
-        createAccountLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginModal.classList.add('hidden');
-            signupModal.classList.remove('hidden');
-        });
-
-        // Password visibility toggle for both modals
-        document.querySelectorAll('input[type="password"]').forEach(passwordInput => {
-            const showButton = passwordInput.nextElementSibling;
-            showButton.addEventListener('click', () => {
-                if (passwordInput.type === 'password') {
-                    passwordInput.type = 'text';
-                    showButton.textContent = 'Hide';
-                } else {
-                    passwordInput.type = 'password';
-                    showButton.textContent = 'Show';
-                }
-            });
-        });
-
-        // Add form submission handling
-        const loginForm = document.getElementById('loginForm');
-        const signupForm = document.getElementById('signupForm');
-
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = loginForm.querySelector('input[type="email"]').value;
-            const password = loginForm.querySelector('input[type="password"]').value;
+      // Update UI based on auth state
+      onAuthStateChanged(auth, (user) => {
+        const userInfo = document.getElementById('userInfo');
+        const authButtons = document.getElementById('authButtons');
+        const userInfoText = userInfo.querySelector('p');
+        
+        if (user) {
+            // User is signed in
+            currentUserId = user.uid;
+            userInfoText.textContent = user.email;
+            userInfo.classList.remove('hidden');
+            authButtons.classList.add('hidden');
             
-            // Here you would typically make an API call to your backend
-            console.log('Login attempt with:', { email, password });
-            // For demo purposes, just close the modal
-            loginModal.classList.add('hidden');
-        });
-
-        signupForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = signupForm.querySelector('input[type="email"]').value;
-            const password = signupForm.querySelector('input[type="password"]').value;
-            const updates = signupForm.querySelector('input[type="checkbox"]').checked;
+            // Store user ID in localStorage
+            localStorage.setItem('userId', user.uid);
             
-            // Here you would typically make an API call to your backend
-            console.log('Signup attempt with:', { email, password, updates });
-            // For demo purposes, just close the modal
-            signupModal.classList.add('hidden');
-        });
+            // Update URL with user ID if not present
+            const urlParams = new URLSearchParams(window.location.search);
+            if (!urlParams.has('userId')) {
+                urlParams.set('userId', user.uid);
+                const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                window.history.replaceState({}, '', newUrl);
+            }
+        } else {
+            // User is signed out
+            currentUserId = null;
+            userInfo.classList.add('hidden');
+            authButtons.classList.remove('hidden');
+            localStorage.removeItem('userId');
+            
+            // Redirect to home if on protected page
+            if (window.location.pathname.includes('createResume.html')) {
+                window.location.href = '/index.html';
+            }
+        }
+      });
+
+      // Update sign out button handler
+      document.getElementById('signOutBtn').addEventListener('click', async () => {
+        try {
+            await signOut(auth);
+            console.log('User signed out');
+        } catch (error) {
+            console.error('Sign out error:', error);
+            alert('Error signing out: ' + error.message);
+        }
+      });
+
+      // Add error handling for modals
+      function showModalError(modal, message) {
+        const existingError = modal.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message text-red-500 text-sm mt-4';
+        errorDiv.textContent = message;
+        modal.querySelector('form').appendChild(errorDiv);
+      }
+
+      // Update login form submission with better error handling
+      const loginForm = document.getElementById('loginForm');
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        
+        try {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            await signInWithEmailAndPassword(auth, email, password);
+            loginModal.classList.add('hidden');
+            loginForm.reset();
+        } catch (error) {
+            console.error('Login error:', error);
+            showModalError(loginModal, getAuthErrorMessage(error.code));
+        } finally {
+            submitBtn.disabled = false;
+        }
+      });
+
+      // Add helper function for auth error messages
+      function getAuthErrorMessage(errorCode) {
+        switch (errorCode) {
+            case 'auth/invalid-email':
+                return 'Invalid email address.';
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+                return 'Invalid email or password.';
+            case 'auth/too-many-requests':
+                return 'Too many failed attempts. Please try again later.';
+            case 'auth/email-already-in-use':
+                return 'This email is already registered.';
+            case 'auth/weak-password':
+                return 'Password should be at least 6 characters long.';
+            default:
+                return 'An error occurred. Please try again.';
+        }
+      }
     </script>
 </body>
 </html>
