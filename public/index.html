@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>cvzex - My Resumes</title>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Modal -->
+    <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 w-[480px]">
+            <h2 class="text-3xl font-semibold text-gray-900 mb-8">Login</h2>
+            
+            <form class="space-y-6" id="loginForm">
+                <div>
+                    <label class="block text-gray-600 mb-2">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Email
+                        </span>
+                    </label>
+                    <input type="email" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
+                </div>
+                
+                <div>
+                    <label class="block text-gray-600 mb-2">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            Password
+                        </span>
+                    </label>
+                    <div class="relative">
+                        <input type="password" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
+                        <button type="button" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600">Show</button>
+                    </div>
+                    <a href="#" class="block text-purple-600 hover:text-purple-700 mt-2">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:from-purple-700 hover:to-purple-900">
+                    Login
+                </button>
+            </form>
+
+            <p class="text-center mt-6">
+                <a href="#" class="text-gray-600 hover:text-gray-800">Create account</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 w-[480px]">
+            <h2 class="text-3xl font-semibold text-gray-900 mb-8">Create account</h2>
+            
+            <form class="space-y-6" id="signupForm">
+                <div>
+                    <label class="block text-gray-600 mb-2">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Email
+                        </span>
+                    </label>
+                    <input type="email" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
+                </div>
+                
+                <div>
+                    <label class="block text-gray-600 mb-2">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            Password
+                        </span>
+                    </label>
+                    <div class="relative">
+                        <input type="password" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
+                        <button type="button" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600">Show</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="updates" class="rounded border-gray-300 text-purple-600">
+                    <label for="updates" class="text-gray-600">Get cvzex updates. No spam ever.</label>
+                </div>
+
+                <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:from-purple-700 hover:to-purple-900">
+                    Signup
+                </button>
+            </form>
+
+            <div class="text-center mt-6 text-sm text-gray-600">
+                <p>By creating an account, you agree to our <a href="#" class="text-purple-600 hover:text-purple-700">Terms of Service</a>.</p>
+                <p class="mt-1">We do not sell your personal data. To learn more about how we collect, use, share and protect it please read our <a href="#" class="text-purple-600 hover:text-purple-700">Privacy Policy</a></p>
+            </div>
+
+            <p class="text-center mt-6">
+                Already have an account? <a href="#" class="text-purple-600 hover:text-purple-700" id="switchToLogin">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white border-r border-gray-200 p-6">
+            <div class="mb-12">
+                <img src="/api/placeholder/32/32" alt="cvzex Logo" class="h-8">
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <div class="text-purple-700 bg-purple-50 py-2 px-4 rounded-lg font-medium">
+                    Resume
+                </div>
+                <div class="text-gray-700 py-2 px-4 hover:bg-gray-50 rounded-lg">
+                    Cover Letter
+                </div>
+                <div class="text-gray-700 py-2 px-4 hover:bg-gray-50 rounded-lg">
+                    Job Tracker
+                </div>
+                <div class="text-gray-700 py-2 px-4 hover:bg-gray-50 rounded-lg mt-6">
+                    More
+                </div>
+            </nav>
+
+            <!-- Auth Buttons -->
+            <div class="fixed bottom-8 left-6 w-52 space-y-3">
+                <button id="loginBtn" class="w-full py-2.5 px-4 border border-gray-200 rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                    Login
+                </button>
+                <button id="signupBtn" class="w-full py-2.5 px-4 bg-purple-700 text-white rounded-lg hover:bg-purple-800">
+                    Signup
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-8">
+            <h1 class="text-2xl font-bold text-gray-900 mb-8">My Resumes</h1>
+            
+            <div class="grid grid-cols-2 gap-8">
+                <!-- New Resume Card -->
+                <div onclick="window.location.href='createResume.html'" class="border-2 border-dashed border-gray-200 rounded-xl bg-white p-6 h-72 flex items-center justify-center cursor-pointer hover:border-gray-300 transition-colors">
+                    <div class="text-center">
+                        <div class="text-4xl text-gray-400 mb-2">+</div>
+                        <div class="text-gray-500">New resume</div>
+                    </div>
+                </div>
+
+                <!-- Existing Resume Card -->
+                <div class="bg-white rounded-xl p-6 h-72">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-gray-900 font-medium">Resume 1</h3>
+                            <p class="text-sm text-gray-500 mt-1">edited a few secs ago • A4</p>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-600 p-1">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this script before closing body tag -->
+    <script>
+        // Get modal elements
+        const loginModal = document.getElementById('loginModal');
+        const signupModal = document.getElementById('signupModal');
+        const loginButton = document.getElementById('loginBtn');
+        const signupButton = document.getElementById('signupBtn');
+        const switchToLoginLink = document.getElementById('switchToLogin');
+        const createAccountLink = document.querySelector('a[href="#"].text-gray-600');
+
+        // Show login modal when login button is clicked
+        loginButton.addEventListener('click', () => {
+            loginModal.classList.remove('hidden');
+        });
+
+        // Show signup modal when signup button is clicked
+        signupButton.addEventListener('click', () => {
+            signupModal.classList.remove('hidden');
+        });
+
+        // Close modals when clicking outside
+        [loginModal, signupModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        });
+
+        // Switch between modals
+        switchToLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            signupModal.classList.add('hidden');
+            loginModal.classList.remove('hidden');
+        });
+
+        createAccountLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginModal.classList.add('hidden');
+            signupModal.classList.remove('hidden');
+        });
+
+        // Password visibility toggle for both modals
+        document.querySelectorAll('input[type="password"]').forEach(passwordInput => {
+            const showButton = passwordInput.nextElementSibling;
+            showButton.addEventListener('click', () => {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    showButton.textContent = 'Hide';
+                } else {
+                    passwordInput.type = 'password';
+                    showButton.textContent = 'Show';
+                }
+            });
+        });
+
+        // Add form submission handling
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = loginForm.querySelector('input[type="email"]').value;
+            const password = loginForm.querySelector('input[type="password"]').value;
+            
+            // Here you would typically make an API call to your backend
+            console.log('Login attempt with:', { email, password });
+            // For demo purposes, just close the modal
+            loginModal.classList.add('hidden');
+        });
+
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = signupForm.querySelector('input[type="email"]').value;
+            const password = signupForm.querySelector('input[type="password"]').value;
+            const updates = signupForm.querySelector('input[type="checkbox"]').checked;
+            
+            // Here you would typically make an API call to your backend
+            console.log('Signup attempt with:', { email, password, updates });
+            // For demo purposes, just close the modal
+            signupModal.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

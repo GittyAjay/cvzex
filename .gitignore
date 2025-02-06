@@ -1,0 +1,16 @@
+./node_modules
+./dist
+./build
+./public/api
+./public/assets
+./public/images
+./public/fonts
+./public/css
+./public/js
+./public/fonts
+./public/images
+./public/fonts
+./public/images
+node_modules/
+#log
+log/

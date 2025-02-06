@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>cvzex</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Loading Spinner -->
+    <div
+      id="loading"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-8 rounded-lg flex items-center">
+        <svg
+          class="animate-spin h-8 w-8 text-purple-600"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        <span class="ml-4 text-gray-700">Analyzing job match...</span>
+      </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-12">
+      <!-- Add a gradient background header -->
+      <div class="text-center mb-16 bg-gradient-to-r from-purple-600 to-indigo-600 p-12 rounded-2xl shadow-xl">
+        <h1 class="text-5xl font-bold text-white mb-4 tracking-tight">
+          cvzex
+        </h1>
+        <p class="text-purple-100 text-xl">
+          Let AI optimize your job application journey
+        </p>
+      </div>
+
+      <!-- Add info cards before the form -->
+      <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div class="bg-white p-8 rounded-xl shadow-lg transform hover:scale-[1.02] transition-all duration-300">
+          <div class="text-purple-600 mb-4">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">Smart Analysis</h3>
+          <p class="text-gray-600">Our AI analyzes job requirements and matches them with your resume for optimal results.</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-xl shadow-lg transform hover:scale-[1.02] transition-all duration-300">
+          <div class="text-purple-600 mb-4">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">Instant Optimization</h3>
+          <p class="text-gray-600">Get tailored suggestions to improve your resume and increase your chances of success.</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-xl shadow-lg transform hover:scale-[1.02] transition-all duration-300">
+          <div class="text-purple-600 mb-4">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">Secure Process</h3>
+          <p class="text-gray-600">Your data is handled securely and confidentially throughout the optimization process.</p>
+        </div>
+      </div> -->
+
+      <!-- Main Content -->
+      <form id="jobMatchForm" class="max-w-3xl mx-auto space-y-8">
+        <!-- Timeline -->
+        <div class="relative mb-12 px-4">
+          <!-- Steps Labels -->
+          <div class="flex justify-between mb-4">
+            <div>
+              <span class="font-bold text-purple-700">STEP 01</span>
+            </div>
+            <div>
+              <span class="font-bold text-gray-400">STEP 02</span>
+            </div>
+            <div>
+              <span class="font-bold text-gray-400">STEP 03</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar Container -->
+          <div class="relative pt-2">
+            <!-- Background Line -->
+            <div class="absolute w-full h-1 bg-gray-200 rounded top-2"></div>
+            
+            <!-- Active Progress Line -->
+            <div class="absolute h-1 bg-purple-700 rounded transition-all duration-500 top-2" style="width: 33%"></div>
+            
+            <!-- Progress Dots -->
+            <div class="relative flex justify-between">
+              <!-- Step 1 Dot -->
+              <div class="w-5 h-5 rounded-full bg-purple-700 border-2 border-white shadow-md transform -translate-y-2"></div>
+              
+              <!-- Step 2 Dot -->
+              <div class="w-5 h-5 rounded-full bg-gray-200 border-2 border-white shadow-md transform -translate-y-2"></div>
+              
+              <!-- Step 3 Dot -->
+              <div class="w-5 h-5 rounded-full bg-gray-200 border-2 border-white shadow-md transform -translate-y-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 1: Job URL Input -->
+        <div id="step1Content"
+          class="bg-white rounded-xl shadow-lg p-8 transform hover:scale-[1.01] transition-all duration-300"
+        >
+          <div class="flex items-center mb-6">
+            <span
+              class="bg-purple-700 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4"
+              >1</span
+            >
+            <h2 class="text-2xl font-bold text-gray-800">Enter Job Details</h2>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center space-x-4 mb-4">
+              <button
+                type="button"
+                id="urlToggle"
+                class="px-4 py-2 rounded-lg font-medium transition-all duration-300 bg-purple-700 text-white"
+              >
+                URL
+              </button>
+              <button
+                type="button"
+                id="textToggle"
+                class="px-4 py-2 rounded-lg font-medium transition-all duration-300 text-gray-600"
+              >
+                Paste Description
+              </button>
+            </div>
+            <div id="urlInput" class="transition-all duration-300">
+              <input
+                type="url"
+                id="jobUrl"
+                placeholder="Paste job posting URL here"
+                class="w-full px-6 py-4 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg transition-all duration-300"
+              />
+            </div>
+            <div id="textInput" class="hidden transition-all duration-300">
+              <textarea
+                id="jobDescription"
+                placeholder="Paste job description here"
+                rows="6"
+                class="w-full px-6 py-4 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg transition-all duration-300"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Resume Upload -->
+        <div id="step2Content"
+          class="hidden bg-white rounded-xl shadow-lg p-8 transform hover:scale-[1.01] transition-all duration-300"
+        >
+          <div class="flex items-center mb-6">
+            <span
+              class="bg-purple-700 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4"
+              >2</span
+            >
+            <h2 class="text-2xl font-bold text-gray-800">Upload Your Resume</h2>
+          </div>
+          <div
+            class="border-3 border-dashed border-gray-200 rounded-xl p-10 text-center bg-gray-50 hover:bg-gray-100 transition-all duration-300"
+          >
+            <div class="mb-6">
+              <svg
+                class="mx-auto h-16 w-16 text-purple-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-gray-600 text-lg mb-4">
+              Drag and drop your resume here, or
+            </p>
+            <button
+              type="button"
+              class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold border-2 border-purple-600 hover:bg-purple-50 transition-all duration-300"
+            >
+              Browse Files
+            </button>
+            <input
+              type="file"
+              id="resume"
+              class="hidden"
+              accept=".pdf"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Step 3: Results Section -->
+        <div id="step3Content"
+          class="hidden bg-white rounded-xl shadow-lg p-8 transform hover:scale-[1.01] transition-all duration-300"
+        >
+          <div class="flex items-center mb-6">
+            <span
+              class="bg-purple-700 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4"
+              >3</span
+            >
+            <h2 class="text-2xl font-bold text-gray-800">Results</h2>
+          </div>
+          <div class="space-y-6">
+            <!-- Match Score -->
+            <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <h3 class="font-semibold text-gray-800 mb-4 text-xl">
+                Resume Match Score
+              </h3>
+              <div class="w-full bg-gray-200 rounded-full h-4">
+                <div
+                  id="matchScoreBar"
+                  class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-1000"
+                  style="width: 0%"
+                ></div>
+              </div>
+              <p id="matchScoreText" class="text-gray-600 mt-3">
+                Your resume matches 0% of job requirements
+              </p>
+            </div>
+
+            <!-- Suggested Improvements -->
+            <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <h3 class="font-semibold text-gray-800 mb-4 text-xl">
+                Analysis Results
+              </h3>
+              <div id="analysisResults" class="space-y-6">
+                <!-- Key Matching Points -->
+                <div>
+                  <h4 class="font-medium text-gray-800 mb-3">
+                    Key Matching Points
+                  </h4>
+                  <ul id="matchingPointsList" class="space-y-3">
+                    <!-- Points will be dynamically inserted here -->
+                  </ul>
+                </div>
+
+                <!-- Missing Requirements -->
+                <div>
+                  <h4 class="font-medium text-gray-800 mb-3">
+                    Areas for Improvement
+                  </h4>
+                  <ul id="missingRequirementsList" class="space-y-3">
+                    <!-- Missing requirements will be dynamically inserted here -->
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-1 gap-4 mt-8">
+              <button
+                type="button"
+                id="generateResume"
+                class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:from-purple-700 hover:to-purple-800 transform hover:translate-y-[-2px] transition-all duration-300 shadow-md"
+              >
+                Generate Optimized Resume
+              </button>
+              <!-- Commenting out auto-fill button for now
+              <button
+                type="button"
+                id="autoFillApplication"
+                class="bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:from-green-600 hover:to-green-700 transform hover:translate-y-[-2px] transition-all duration-300 shadow-md"
+              >
+                Auto-Fill Application
+              </button>
+              -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button - Only show in steps 1-2 -->
+        <button
+          id="submitButton"
+          type="submit"
+          class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:from-purple-700 hover:to-purple-800 transform hover:translate-y-[-2px] transition-all duration-300 shadow-md"
+        >
+          Analyze Match
+        </button>
+
+        <!-- Step 4: Optimization Section -->
+        <div id="step4Content" class="hidden">
+          <!-- Action Buttons -->
+          <div class="grid grid-cols-1 gap-4 mt-8">
+            <button
+              type="button"
+              id="generateResume"
+              class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:from-purple-700 hover:to-purple-800 transform hover:translate-y-[-2px] transition-all duration-300 shadow-md"
+            >
+              Generate Optimized Resume
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Add footer section -->
+      <footer class="mt-24 text-center">
+        <div class="max-w-3xl mx-auto border-t border-gray-200 pt-8">
+          <div class="flex justify-center space-x-6 mb-4">
+            <a href="#" class="text-gray-400 hover:text-purple-600 transition-colors">
+              <span class="sr-only">Privacy Policy</span>
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 15v-2h2v2h-2zm0-10v6h2V7h-2z" clip-rule="evenodd"/>
+              </svg>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-purple-600 transition-colors">
+              <span class="sr-only">Terms of Service</span>
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 15v-2h2v2h-2zm0-10v6h2V7h-2z" clip-rule="evenodd"/>
+              </svg>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-purple-600 transition-colors">
+              <span class="sr-only">Contact</span>
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 15v-2h2v2h-2zm0-10v6h2V7h-2z" clip-rule="evenodd"/>
+              </svg>
+            </a>
+          </div>
+          <p class="text-gray-500 text-sm">
+            © 2024 cvzex. All rights reserved.
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      // DOM Elements - make sure we have all required elements
+      const jobUrlInput = document.getElementById('jobUrl');
+      const jobDescription = document.getElementById('jobDescription');
+      const urlToggle = document.getElementById('urlToggle');
+      const textToggle = document.getElementById('textToggle');
+      const urlInput = document.getElementById('urlInput');
+      const textInput = document.getElementById('textInput');
+      const fileInput = document.getElementById('resume');
+      const submitButton = document.getElementById('submitButton');
+
+      // URL/Text toggle functionality with logging
+      urlToggle.addEventListener('click', () => {
+        console.log('URL toggle clicked');
+        urlToggle.classList.add('bg-purple-700', 'text-white');
+        urlToggle.classList.remove('text-gray-600');
+        textToggle.classList.remove('bg-purple-700', 'text-white');
+        textToggle.classList.add('text-gray-600');
+        urlInput.classList.remove('hidden');
+        textInput.classList.add('hidden');
+        // Clear description when switching to URL
+        jobDescription.value = '';
+        checkFormCompletion();
+      });
+
+      textToggle.addEventListener('click', () => {
+        console.log('Text toggle clicked');
+        textToggle.classList.add('bg-purple-700', 'text-white');
+        textToggle.classList.remove('text-gray-600');
+        urlToggle.classList.remove('bg-purple-700', 'text-white');
+        urlToggle.classList.add('text-gray-600');
+        textInput.classList.remove('hidden');
+        urlInput.classList.add('hidden');
+        // Clear URL when switching to description
+        jobUrlInput.value = '';
+        checkFormCompletion();
+      });
+
+      // File upload functionality
+      const dropZone = document.querySelector('.border-dashed');
+      const browseButton = dropZone.querySelector('button');
+
+      // Handle browse button click
+      browseButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        fileInput.click();
+      });
+
+      // Handle drag and drop
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('bg-gray-100');
+      });
+
+      dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('bg-gray-100');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('bg-gray-100');
+        
+        if (e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          handleFileSelection(e.dataTransfer.files[0]);
+        }
+      });
+
+      // Handle file selection
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+          handleFileSelection(e.target.files[0]);
+        }
+      });
+
+      function handleFileSelection(file) {
+        if (file.type !== 'application/pdf') {
+          alert('Please upload a PDF file');
+          fileInput.value = '';
+          return;
+        }
+
+        // Update UI to show selected file
+        const fileName = file.name;
+        dropZone.innerHTML = `
+          <div class="mb-6">
+            <svg class="mx-auto h-16 w-16 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <p class="text-gray-600 text-lg mb-4">Selected: ${fileName}</p>
+          <button type="button" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold border-2 border-purple-600 hover:bg-purple-50 transition-all duration-300">
+            Change File
+          </button>
+        `;
+
+        // Re-attach click handler to new button
+        dropZone.querySelector('button').addEventListener('click', (e) => {
+          e.preventDefault();
+          fileInput.click();
+        });
+
+        // Check form completion
+        checkFormCompletion();
+      }
+
+      // Update the checkFormCompletion function to handle file input
+      function checkFormCompletion() {
+        console.log('Checking form completion');
+        console.log('URL value:', jobUrlInput.value);
+        console.log('Description value:', jobDescription.value);
+        console.log('File selected:', fileInput.files && fileInput.files[0] ? fileInput.files[0].name : 'none');
+        
+        const hasUrl = jobUrlInput.value.trim() !== '';
+        const hasDescription = jobDescription.value.trim() !== '';
+        const hasResume = fileInput.files && fileInput.files[0];
+        
+        if (currentStep === 1) {
+          if (hasUrl || hasDescription) {
+            submitButton.textContent = 'Next: Upload Resume';
+            submitButton.classList.remove('hidden');
+            console.log('Step 1: Showing submit button');
+          } else {
+            submitButton.classList.add('hidden');
+            console.log('Step 1: Hiding submit button');
+          }
+        } else if (currentStep === 2) {
+          if (hasResume) {
+            submitButton.textContent = 'Analyze Match';
+            submitButton.classList.remove('hidden');
+            console.log('Step 2: Showing submit button');
+          } else {
+            submitButton.classList.add('hidden');
+            console.log('Step 2: Hiding submit button');
+          }
+        }
+      }
+
+      // Add input event listeners for both fields
+      jobUrlInput.addEventListener('input', () => {
+        console.log('URL input changed');
+        checkFormCompletion();
+      });
+
+      jobDescription.addEventListener('input', () => {
+        console.log('Description input changed');
+        checkFormCompletion();
+      });
+
+      // Handle next step navigation and form submission
+      document.getElementById('submitButton').addEventListener('click', async (e) => {
+        e.preventDefault();
+        
+        if (currentStep === 1) {
+          const hasUrl = jobUrlInput.value.trim() !== '';
+          const hasDescription = jobDescription.value.trim() !== '';
+          
+          if (!hasUrl && !hasDescription) {
+            alert('Please provide either a job URL or description');
+            return;
+          }
+          console.log('Moving to step 2');
+          currentStep = 2;
+          updateTimeline(2);
+        } 
+        else if (currentStep === 2) {
+          if (!fileInput.files || !fileInput.files[0]) {
+            alert('Please upload your resume');
+            return;
+          }
+          try {
+            showLoading();
+            const formData = new FormData();
+            
+            // Add both URL and description fields to FormData
+            // The server can handle whichever one is present
+            if (jobUrlInput.value.trim()) {
+              formData.append('jobUrl', jobUrlInput.value.trim());
+            }
+            if (jobDescription.value.trim()) {
+              formData.append('jobDescription', jobDescription.value.trim());
+            }
+            
+            // Add the resume file
+            formData.append('file', fileInput.files[0]);
+
+            // Log the FormData contents for debugging
+            for (let pair of formData.entries()) {
+                console.log('FormData:', pair[0], pair[1]);
+            }
+
+            const response = await fetch('/api/match', {
+              method: 'POST',
+              body: formData
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || errorData.error || `Server error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Server response:', data);
+
+            if (!data.matchId) {
+              throw new Error('No match ID received from server');
+            }
+
+            currentStep = 3;
+            updateTimeline(3);
+            pollMatchResult(data.matchId);
+          } catch (error) {
+            console.error('Submission error:', error);
+            hideLoading();
+            alert('Error: ' + error.message);
+          }
+        }
+      });
+
+      // Initialize the form state
+      window.addEventListener('DOMContentLoaded', () => {
+        // Start with URL input visible
+        urlToggle.click();
+        checkFormCompletion();
+      });
+
+      async function pollMatchResult(matchId) {
+        try {
+          console.log('Polling for match ID:', matchId);
+          const response = await fetch(`/api/match/${matchId}`, {
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          console.log('Poll result:', result);
+
+          if (result.status === 'completed') {
+            updateResults(result);
+            hideLoading();
+          } else if (result.status === 'processing') {
+            setTimeout(() => pollMatchResult(matchId), 2000);
+          } else {
+            throw new Error('Analysis failed');
+          }
+        } catch (error) {
+          console.error('Polling error:', error);
+          hideLoading();
+          alert('Error getting results: ' + error.message);
+        }
+      }
+
+      function updateResults(data) {
+        // Update match score
+        const score = data.score || 0;
+        const matchScoreBar = document.getElementById('matchScoreBar');
+        const matchScoreText = document.getElementById('matchScoreText');
+        
+        console.log('Setting score:', score); // Debug log
+        
+        matchScoreBar.style.width = `${score}%`;
+        matchScoreText.textContent = `Your resume matches ${score}% of job requirements`;
+
+        // Parse and display analysis
+        const analysis = parseAnalysis(data.analysis);
+        console.log('Parsed analysis:', analysis); // Debug log
+
+        // Update matching points
+        const matchingPointsList = document.getElementById('matchingPointsList');
+        matchingPointsList.innerHTML = analysis.matchingPoints
+          .map(point => `
+            <li class="flex items-start text-gray-700">
+              <svg class="h-5 w-5 text-green-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>${point}</span>
+            </li>
+          `).join('');
+
+        // Update missing requirements
+        const missingRequirementsList = document.getElementById('missingRequirementsList');
+        missingRequirementsList.innerHTML = analysis.missingRequirements
+          .map(point => `
+            <li class="flex items-start text-gray-700">
+              <svg class="h-5 w-5 text-yellow-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <span>${point}</span>
+            </li>
+          `).join('');
+      }
+
+      function parseAnalysis(analysis) {
+        console.log('Parsing analysis:', analysis); // Debug log
+        
+        const sections = {
+          matchingPoints: [],
+          missingRequirements: []
+        };
+
+        // Split the analysis into sections
+        const lines = analysis.split('\n');
+        let currentSection = null;
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          
+          if (trimmedLine.includes('Key Matching Points:')) {
+            currentSection = 'matchingPoints';
+            continue;
+          } else if (trimmedLine.includes('Missing Requirements:')) {
+            currentSection = 'missingRequirements';
+            continue;
+          }
+          
+          // Check for numbered points and clean them up
+          if (trimmedLine.match(/^\d+\./)) {
+            const cleanedPoint = trimmedLine
+              .replace(/^\d+\.\s*/, '') // Remove number and dot
+              .replace(/\*\*([^*]+)\*\*:\s*/, '$1: ') // Clean up markdown formatting
+              .trim();
+            
+            if (currentSection && cleanedPoint) {
+              sections[currentSection].push(cleanedPoint);
+            }
+          }
+        }
+
+        console.log('Parsed sections:', sections); // Debug log
+        return sections;
+      }
+
+      function showLoading() {
+        document.getElementById('loading').classList.remove('hidden');
+      }
+
+      function hideLoading() {
+        document.getElementById('loading').classList.add('hidden');
+      }
+
+      document
+        .querySelector('#generateResume')
+        .addEventListener('click', async () => {
+          try {
+            // Validate inputs first
+            if (!fileInput.files || !fileInput.files[0]) {
+              throw new Error('Please upload a resume first');
+            }
+
+            if (!jobUrlInput.value && !jobDescription.value) {
+              throw new Error('Please provide either a job URL or description');
+            }
+
+            const formData = new FormData();
+            // Add either URL or description based on which is active
+            if (!urlInput.classList.contains('hidden')) {
+              formData.append('jobUrl', jobUrlInput.value);
+            } else {
+              formData.append('jobDescription', jobDescription.value);
+            }
+            formData.append('resume', fileInput.files[0]);
+
+            showLoading();
+            const response = await fetch('/api/optimize-resume', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || 'Failed to optimize resume');
+            }
+
+            const data = await response.json();
+            if (!data.optimizeId) {
+              throw new Error('No optimization ID received from server');
+            }
+
+            await pollOptimizationStatus(data.optimizeId);
+          } catch (error) {
+            hideLoading();
+            alert(error.message);
+            console.error('Resume optimization error:', error);
+          }
+        });
+
+      async function pollOptimizationStatus(optimizeId) {
+        try {
+          if (!optimizeId) {
+            throw new Error('Invalid optimization ID');
+          }
+
+          console.log(`[Debug] Polling for optimizeId: ${optimizeId}`);
+          const response = await fetch(`/api/optimize-resume/${optimizeId}`);
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          console.log('[Debug] Poll result:', result);
+
+          if (result.status === 'completed') {
+            hideLoading();
+            
+            // Handle PDF download
+            if (result.pdfUrl) {
+              try {
+                const link = document.createElement('a');
+                link.href = result.pdfUrl;
+                link.download = `optimized_resume_${optimizeId}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                console.log('[Debug] PDF download initiated');
+              } catch (downloadError) {
+                console.error('[Debug] PDF download error:', downloadError);
+                throw downloadError;
+              }
+            }
+
+            // Show preview in modal
+            if (result.optimizedResume) {
+              showOptimizedResume(result.optimizedResume);
+            } else {
+              console.warn('[Debug] No optimized resume content in result');
+              throw new Error('No optimized resume content received');
+            }
+            
+            return;
+          } else if (result.status === 'processing') {
+            setTimeout(() => pollOptimizationStatus(optimizeId), 2000);
+          } else {
+            throw new Error(result.error || 'Optimization failed');
+          }
+        } catch (error) {
+          console.error('[Debug] Error in pollOptimizationStatus:', error);
+          hideLoading();
+          alert(`Resume generation error: ${error.message}`);
+        }
+      }
+
+      function showOptimizedResume(htmlContent) {
+        try {
+          console.log('[Debug] Showing resume in modal');
+          
+          // Ensure modal exists in the DOM
+          if (!document.getElementById('resumePreviewModal')) {
+            addModalToBody();
+          }
+
+          const modal = document.getElementById('resumePreviewModal');
+          const content = document.getElementById('resumePreviewContent');
+          const closeBtn = document.getElementById('closeModal');
+
+          // Set the content
+          content.innerHTML = htmlContent;
+
+          // Show the modal
+          modal.classList.remove('hidden');
+
+          // Handle close button
+          closeBtn.onclick = () => {
+            modal.classList.add('hidden');
+          };
+
+          // Handle click outside modal to close
+          modal.onclick = (e) => {
+            if (e.target === modal) {
+              modal.classList.add('hidden');
+            }
+          };
+
+          // Handle escape key to close
+          document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+              modal.classList.add('hidden');
+            }
+          });
+
+          console.log('[Debug] Modal displayed successfully');
+        } catch (error) {
+          console.error('[Debug] Modal display error:', error);
+          alert('Error displaying resume preview: ' + error.message);
+        }
+      }
+
+      function addModalToBody() {
+        const modalHTML = `
+          <div id="resumePreviewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+            <div class="bg-white w-11/12 max-w-4xl h-5/6 rounded-lg shadow-xl flex flex-col">
+              <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-semibold text-gray-900">Optimized Resume Preview</h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div id="resumePreviewContent" class="flex-1 p-6 overflow-auto">
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+      }
+
+      // Add to server startup
+      setInterval(async () => {
+        try {
+          const files = await fs.promises.readdir(
+            path.join(__dirname, 'public', 'resumes')
+          );
+          const now = Date.now();
+
+          for (const file of files) {
+            const filePath = path.join(__dirname, 'public', 'resumes', file);
+            const stats = await fs.promises.stat(filePath);
+
+            // Delete files older than 1 hour
+            if (now - stats.mtimeMs > 3600000) {
+              await fs.promises.unlink(filePath);
+            }
+          }
+        } catch (error) {
+          console.error('Error cleaning up resume files:', error);
+        }
+      }, 3600000); // Run every hour
+
+      // Track current step
+      let currentStep = 1;
+
+      // Update timeline function
+      function updateTimeline(step) {
+        // Remove any existing edit buttons
+        removeEditButtons();
+
+        // Update progress bar width based on current step
+        const progressBar = document.querySelector('.bg-purple-700.rounded');
+        progressBar.style.width = `${((step - 1) * 50)}%`;
+
+        // Update step labels and dots
+        const stepLabels = document.querySelectorAll('.font-bold');
+        const stepDots = document.querySelectorAll('.rounded-full');
+        
+        stepLabels.forEach((label, index) => {
+          if (index + 1 <= step) {
+            label.classList.remove('text-gray-400');
+            label.classList.add('text-purple-700');
+          } else {
+            label.classList.remove('text-purple-700');
+            label.classList.add('text-gray-400');
+          }
+        });
+
+        stepDots.forEach((dot, index) => {
+          if (index + 1 <= step) {
+            dot.classList.remove('bg-gray-200');
+            dot.classList.add('bg-purple-700');
+          } else {
+            dot.classList.remove('bg-purple-700');
+            dot.classList.add('bg-gray-200');
+          }
+        });
+
+        // Update content visibility
+        const submitButton = document.getElementById('submitButton');
+        const contents = {
+          step1: document.getElementById('step1Content'),
+          step2: document.getElementById('step2Content'),
+          step3: document.getElementById('step3Content'),
+          step4: document.getElementById('step4Content')
+        };
+
+        // Hide all contents first
+        Object.values(contents).forEach(content => {
+          if (content) content.classList.add('hidden');
+        });
+
+        // Show only current step content
+        switch(step) {
+          case 1:
+            contents.step1.classList.remove('hidden');
+            break;
+          case 2:
+            contents.step2.classList.remove('hidden');
+            break;
+          case 3:
+            contents.step3.classList.remove('hidden');
+            submitButton.classList.add('hidden');
+            break;
+          case 4:
+            contents.step4.classList.remove('hidden');
+            submitButton.classList.add('hidden');
+            break;
+        }
+
+        // Check form completion after updating visibility
+        checkFormCompletion();
+
+        // Add back/edit buttons for completed steps
+        if (step > 1) {
+          const editStep1 = document.createElement('button');
+          editStep1.textContent = 'Edit Job Details';
+          editStep1.className = 'text-purple-600 hover:text-purple-800 text-sm mt-2';
+          editStep1.onclick = () => {
+            currentStep = 1;
+            updateTimeline(1);
+          };
+          contents.step1.parentNode.insertBefore(editStep1, contents.step1.nextSibling);
+        }
+
+        if (step > 2) {
+          const editStep2 = document.createElement('button');
+          editStep2.textContent = 'Edit Resume';
+          editStep2.className = 'text-purple-600 hover:text-purple-800 text-sm mt-2';
+          editStep2.onclick = () => {
+            currentStep = 2;
+            updateTimeline(2);
+          };
+          contents.step2.parentNode.insertBefore(editStep2, contents.step2.nextSibling);
+        }
+      }
+
+      // Initialize timeline
+      currentStep = 1;
+      updateTimeline(1);
+
+      // Clean up edit buttons when switching steps
+      function removeEditButtons() {
+        const editButtons = document.querySelectorAll('.text-purple-600.text-sm.mt-2');
+        editButtons.forEach(button => button.remove());
+      }
+    </script>
+    <script type="module">
+      // Auto-fill button click handler
+      document
+        .getElementById('autoFillApplication')
+        .addEventListener('click', async function () {
+          try {
+            showLoading();
+            document
+              .getElementById('loading')
+              .querySelector('span').textContent =
+              'Auto-filling application...';
+
+            // Get the resume file
+            const resumeFile = fileInput.files[0];
+
+            if (!resumeFile) {
+              throw new Error('Please upload a resume first');
+            }
+
+            const formData = new FormData();
+            formData.append('jobUrl', jobUrlInput.value);
+            formData.append('resume', resumeFile);
+
+            const response = await fetch('/api/applications/start', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (!response.ok) {
+              throw new Error('Auto-fill request failed');
+            }
+
+            const result = await response.json();
+
+            if (result.status === 'pending') {
+              // Poll for status updates
+              await pollApplicationStatus(result.applicationId);
+              alert(
+                'Application auto-filled successfully! Please review before submitting.'
+              );
+            } else {
+              throw new Error(result.message || 'Auto-fill failed');
+            }
+          } catch (error) {
+            alert(`Auto-fill error: ${error.message}`);
+          } finally {
+            hideLoading();
+            document
+              .getElementById('loading')
+              .querySelector('span').textContent = 'Analyzing job match...';
+          }
+        });
+
+      // Helper function to poll application status
+      async function pollApplicationStatus(applicationId) {
+        const maxAttempts = 30; // 30 seconds
+        let attempts = 0;
+
+        while (attempts < maxAttempts) {
+          const response = await fetch(`/api/applications/${applicationId}`);
+          const status = await response.json();
+
+          if (status.status === 'completed') {
+            return status;
+          } else if (status.status === 'failed') {
+            throw new Error(status.error || 'Application failed');
+          }
+
+          attempts++;
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second between polls
+        }
+
+        throw new Error('Application timed out');
+      }
+    </script>
+    
+  </body>
+</html>
