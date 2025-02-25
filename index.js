@@ -2,7 +2,6 @@ import express from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import OpenAI from 'openai';
 import { autoFillJobApplication } from './automation.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -15,26 +14,21 @@ import fs from 'fs';
 import puppeteer from 'puppeteer';
 import { v4 as uuidv4 } from 'uuid';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getFirestore, collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  doc,
+  setDoc,
+} from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref as dbRef, set, get, child } from 'firebase/database';
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-//log
-// Add validation
-if (!process.env.OPENAI_API_KEY) {
-  console.error('OPENAI_API_KEY is not set in environment variables');
-  process.exit(1);
-}
-
-// Import pdf-parse with require since it's a CommonJS module
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+import {
+  GoogleGenerativeAI,
+  HarmCategory,
+  HarmBlockThreshold,
+} from '@google/generative-ai';
+import pdf from 'pdf-parse';
 
 // Load environment variables
 dotenv.config();
@@ -53,11 +47,11 @@ const upload = multer({
     }
   },
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
 }).fields([
   { name: 'resume', maxCount: 1 },
-  { name: 'file', maxCount: 1 }
+  { name: 'file', maxCount: 1 },
 ]);
 
 // Get current directory
@@ -117,14 +111,14 @@ app.get('/api/optimize-resume/limit-status', resumeLimiter, (req, res) => {
 
 // Add Firebase configuration and initialization
 const firebaseConfig = {
-  apiKey: "AIzaSyDtZ-pIMQNWwczkQM8TWH9AEsSm2bZIpEc",
-  authDomain: "cvzex-26398.firebaseapp.com",
-  projectId: "cvzex-26398",
-  databaseURL: "https://cvzex-26398-default-rtdb.firebaseio.com",
-  storageBucket: "cvzex-26398.appspot.com",
-  messagingSenderId: "231565216123",
-  appId: "1:231565216123:web:c3129e84038af0eb0fd5de",
-  measurementId: "G-NW39XRY1S0"
+  apiKey: 'AIzaSyCsAtnIni2d7ZRdi7En6qF0DyJXuiLCL9Y',
+  authDomain: 'swipmart-b9616.firebaseapp.com',
+  databaseURL: 'https://swipmart-b9616-default-rtdb.firebaseio.com',
+  projectId: 'swipmart-b9616',
+  storageBucket: 'swipmart-b9616.firebasestorage.app',
+  messagingSenderId: '159526208832',
+  appId: '1:159526208832:web:a000685804f7902964e6a5',
+  measurementId: 'G-7NN22J9KNJ',
 };
 
 // Initialize Firebase with Realtime Database
@@ -142,15 +136,31 @@ const returns = new Map();
 const jobMatches = new Map(); // Store job matching results
 const resumeOptimizations = new Map(); // Add this line to store resume optimizations
 
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({
+  model: 'gemini-1.5-flash-8b',
+});
+
+const generationConfig = {
+  temperature: 1,
+  topP: 0.95,
+  topK: 40,
+  maxOutputTokens: 8192,
+  responseMimeType: 'text/plain',
+};
+
 // Helper function to extract text from URL
 async function extractJobDescription(url) {
   try {
     // Configure axios with headers to mimic a real browser
     const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      Accept:
+        'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       'Accept-Language': 'en-US,en;q=0.5',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'Upgrade-Insecure-Requests': '1',
     };
 
@@ -164,20 +174,20 @@ async function extractJobDescription(url) {
       console.log('Direct request failed, attempting with Puppeteer...');
       const browser = await puppeteer.launch({
         headless: 'new',
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
       const page = await browser.newPage();
       await page.setUserAgent(headers['User-Agent']);
-      
+
       // Wait longer and handle dynamic content
       await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
-      
+
       // Wait for job description content to load
       await page.waitForSelector('body', { timeout: 10000 });
-      
+
       const content = await page.content();
       await browser.close();
-      
+
       const $ = cheerio.load(content);
       return extractTextFromHTML($);
     }
@@ -190,26 +200,37 @@ async function extractJobDescription(url) {
 function extractTextFromHTML($) {
   // Remove unwanted elements
   $('script, style, noscript, iframe, img').remove();
-  
+
   // Try different common selectors for job descriptions
   const selectors = [
     // Common job description selectors
-    '.job-description', '#job-description', '[data-test="job-description"]',
-    '.description', '#description', '.jobDescriptionText', 
-    'section[class*="description"]', 'div[class*="description"]',
+    '.job-description',
+    '#job-description',
+    '[data-test="job-description"]',
+    '.description',
+    '#description',
+    '.jobDescriptionText',
+    'section[class*="description"]',
+    'div[class*="description"]',
     // Common content area selectors
-    'main', 'article', '.content', '#content',
-    '[role="main"]', '.main-content', '#main-content'
+    'main',
+    'article',
+    '.content',
+    '#content',
+    '[role="main"]',
+    '.main-content',
+    '#main-content',
   ];
 
   let jobDescription = '';
-  
+
   // Try each selector until we find content
   for (const selector of selectors) {
     const element = $(selector);
     if (element.length > 0) {
       jobDescription = element.text().trim();
-      if (jobDescription.length > 100) { // Ensure we have substantial content
+      if (jobDescription.length > 100) {
+        // Ensure we have substantial content
         break;
       }
     }
@@ -235,76 +256,100 @@ async function extractResumeText(pdfBuffer) {
     if (!pdfBuffer || pdfBuffer.length === 0) {
       throw new Error('Empty or invalid PDF buffer');
     }
-    const data = await pdfParse(pdfBuffer);
+    const data = await pdf(pdfBuffer);
     return data.text;
   } catch (error) {
     throw new Error(`Failed to extract resume text: ${error.message}`);
   }
 }
 
-// Helper function to calculate match score using OpenAI
+// Helper function to calculate match score using Gemini
 async function calculateMatchScore(jobDescription, resumeText) {
   try {
-    console.log('Starting match score calculation...');
-    console.log('Job description length:', jobDescription.length);
-    console.log('Resume text length:', resumeText.length);
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an expert HR professional who evaluates job candidates. Analyze the job description and resume, then provide a match score from 0-100 and explain key matching points and missing requirements. Start your response with "Match Score: [NUMBER]" where [NUMBER] is between 0 and 100.`,
-        },
-        { role: 'user', content: `Job Description:\n${jobDescription}` },
-        { role: 'user', content: `Resume:\n${resumeText}` },
-      ],
-      max_tokens: 500,
+    const chatSession = model.startChat({
+      generationConfig,
+      history: [],
     });
 
-    console.log('OpenAI API response received');
-    const analysis = response.choices[0].message.content;
-    
-    // Updated regex pattern to match more score formats
-    const scorePatterns = [
-      /Match Score:\s*(\d{1,3})/i,
-      /Score:\s*(\d{1,3})/i,
-      /(\d{1,3})(?=\s*\/\s*100|\s*percent|\s*%)/,
-      /Rating:\s*(\d{1,3})/i
-    ];
+    const prompt = `As an expert HR professional, analyze this job description and resume. Provide a detailed evaluation in EXACTLY this format:
 
-    let score = null;
-    for (const pattern of scorePatterns) {
-      const match = analysis.match(pattern);
-      if (match && match[1]) {
-        score = parseInt(match[1]);
-        if (score >= 0 && score <= 100) {
-          break;
-        }
-      }
-    }
+Match Score: [0-100]
 
-    console.log('Score extracted:', score);
-    console.log('Analysis length:', analysis.length);
-    console.log('First 100 characters of analysis:', analysis.substring(0, 100));
+Key Matching Points:
+- [specific matching skill or experience]
+- [specific matching skill or experience]
+- [specific matching skill or experience]
 
-    // Validate score
-    if (score === null || isNaN(score) || score < 0 || score > 100) {
-      console.error('Invalid score detected:', score);
-      console.log('Full analysis:', analysis);
-      throw new Error('Failed to extract valid score from analysis');
+Areas for Improvement:
+- [specific improvement suggestion]
+- [specific improvement suggestion]
+- [specific improvement suggestion]
+
+Job Description:
+${jobDescription}
+
+Resume:
+${resumeText}`;
+
+    const result = await chatSession.sendMessage(prompt);
+    const analysis = result.response.text();
+
+    console.log('Raw Analysis:', analysis); // Debug log
+
+    // Extract score
+    const scoreMatch = analysis.match(/Match Score:\s*(\d{1,3})/i);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
+
+    // Extract sections with more robust splitting
+    const sections = analysis.split(
+      /(?=Match Score:|Key Matching Points:|Areas for Improvement:)/i
+    );
+
+    // Extract matching points
+    const matchingPointsSection = sections.find((s) =>
+      s.includes('Key Matching Points:')
+    );
+    const matchingPoints = matchingPointsSection
+      ? matchingPointsSection
+          .split('Key Matching Points:')[1]
+          .trim()
+          .split('\n')
+          .filter((point) => point.trim().startsWith('-'))
+          .map((point) => point.trim().substring(1).trim())
+      : [];
+
+    // Extract improvement areas
+    const improvementSection = sections.find((s) =>
+      s.includes('Areas for Improvement:')
+    );
+    const improvementAreas = improvementSection
+      ? improvementSection
+          .split('Areas for Improvement:')[1]
+          .trim()
+          .split('\n')
+          .filter((point) => point.trim().startsWith('-'))
+          .map((point) => point.trim().substring(1).trim())
+      : [];
+
+    // Add validation and debugging
+    console.log('Parsed Results:', {
+      score,
+      matchingPointsCount: matchingPoints.length,
+      improvementAreasCount: improvementAreas.length,
+    });
+
+    if (!matchingPoints.length || !improvementAreas.length) {
+      console.warn('Warning: Empty points arrays detected');
     }
 
     return {
       score,
+      matchingPoints,
+      improvementAreas,
       analysis,
     };
   } catch (error) {
-    console.error('Match score calculation error:', {
-      message: error.message,
-      stack: error.stack,
-      cause: error.cause
-    });
+    console.error('Match score calculation error:', error);
     throw new Error(`Failed to calculate match score: ${error.message}`);
   }
 }
@@ -314,22 +359,76 @@ async function generateResumePDF(htmlContent) {
   try {
     const browser = await puppeteer.launch({
       headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'] // Add these args for better compatibility
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
+
     const page = await browser.newPage();
-    await page.setContent(htmlContent, {
-      waitUntil: 'networkidle0' // Wait until page is fully loaded
+
+    // Set viewport for better rendering
+    await page.setViewport({
+      width: 1200,
+      height: 1600,
+      deviceScaleFactor: 1,
     });
+
+    // Add default styling to ensure proper rendering
+    const htmlWithStyles = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              margin: 0;
+              padding: 20px;
+            }
+            @page {
+              margin: 20mm;
+              size: A4;
+            }
+          </style>
+        </head>
+        <body>
+          ${htmlContent}
+        </body>
+      </html>
+    `;
+
+    await page.setContent(htmlWithStyles, {
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+    });
+
+    // Generate PDF with proper settings
     const pdfBuffer = await page.pdf({
       format: 'A4',
-      margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' },
-      printBackground: true // Enable background graphics
+      margin: {
+        top: '20mm',
+        right: '20mm',
+        bottom: '20mm',
+        left: '20mm',
+      },
+      printBackground: true,
+      preferCSSPageSize: true,
+      displayHeaderFooter: false,
     });
+
     await browser.close();
+
+    // Validate PDF using string comparison
+    const header = pdfBuffer.subarray(0, 4).toString('ascii');
+    if (header !== '%PDF') {
+      console.error('Invalid PDF header:', header);
+      throw new Error('Generated PDF is invalid');
+    }
+
+    console.log('Valid PDF generated, size:', pdfBuffer.length, 'bytes');
     return pdfBuffer;
   } catch (error) {
-    console.error('PDF Generation Error:', error);
-    throw new Error(`Failed to generate PDF: ${error.message}`);
+    console.error('Error generating PDF:', error);
+    throw error;
   }
 }
 
@@ -342,20 +441,19 @@ app.get('/', (req, res) => {
 app.post('/api/match', async (req, res) => {
   try {
     console.log('\n=== Starting Match Endpoint ===');
-    
-    // Use upload middleware with error handling
-    upload(req, res, async function(err) {
+
+    upload(req, res, async function (err) {
       if (err instanceof multer.MulterError) {
         console.error('Multer error:', err);
         return res.status(400).json({
           error: 'File upload error',
-          details: err.message
+          details: err.message,
         });
       } else if (err) {
         console.error('Unknown error:', err);
         return res.status(500).json({
           error: 'Unknown error occurred during file upload',
-          details: err.message
+          details: err.message,
         });
       }
 
@@ -370,22 +468,24 @@ app.post('/api/match', async (req, res) => {
         if (!uploadedFile) {
           console.log('Error: No resume file provided');
           return res.status(400).json({
-            error: 'Resume file is required'
+            error: 'Resume file is required',
           });
         }
 
         const { jobUrl, jobDescription } = req.body;
         console.log('Job Details:', {
           jobUrl,
-          jobDescription: jobDescription ? 'Description provided' : 'No description',
-          descriptionLength: jobDescription ? jobDescription.length : 0
+          jobDescription: jobDescription
+            ? 'Description provided'
+            : 'No description',
+          descriptionLength: jobDescription ? jobDescription.length : 0,
         });
 
         // Check if at least one of jobUrl or jobDescription is provided
         if (!jobUrl && !jobDescription) {
           console.log('Error: No job URL or description provided');
           return res.status(400).json({
-            error: 'Please provide either a job URL or description'
+            error: 'Please provide either a job URL or description',
           });
         }
 
@@ -408,43 +508,61 @@ app.post('/api/match', async (req, res) => {
             console.log('Using provided job description');
             jobDescriptionText = jobDescription;
           }
-          console.log('Job description text length:', jobDescriptionText.length);
+          console.log(
+            'Job description text length:',
+            jobDescriptionText.length
+          );
 
           // Calculate match score
           console.log('Calculating match score...');
-          const matchResult = await calculateMatchScore(jobDescriptionText, resumeText);
+          const matchResult = await calculateMatchScore(
+            jobDescriptionText,
+            resumeText
+          );
           console.log('Match score calculated:', matchResult.score);
 
-          // Store the match result
+          // Add debug logging for the match result
+          console.log('Match Result:', {
+            score: matchResult.score,
+            matchingPointsCount: matchResult.matchingPoints?.length,
+            improvementAreasCount: matchResult.improvementAreas?.length,
+            matchingPoints: matchResult.matchingPoints,
+            improvementAreas: matchResult.improvementAreas,
+          });
+
+          // Store the match result with structured data
           const matchData = {
             id: matchId,
             status: 'completed',
             score: matchResult.score,
-            analysis: matchResult.analysis,
+            matchingPoints: matchResult.matchingPoints || [], // Ensure arrays if undefined
+            improvementAreas: matchResult.improvementAreas || [],
             timestamp: new Date(),
             jobUrl,
-            jobDescription: jobDescriptionText
+            jobDescription: jobDescriptionText,
           };
-          console.log('Storing match result:', { ...matchData, analysis: 'truncated' });
+
           jobMatches.set(matchId, matchData);
 
-          // Return the match ID
-          console.log('Sending successful response');
+          // Return the structured data in the response
           return res.json({
             matchId,
             status: 'completed',
             score: matchResult.score,
-            analysis: matchResult.analysis
+            matchingPoints: matchResult.matchingPoints || [],
+            improvementAreas: matchResult.improvementAreas || [],
           });
-
         } catch (processingError) {
-          console.error('Processing error:', processingError);
+          console.error('Processing error:', {
+            message: processingError.message,
+            matchResult: processingError.matchResult, // Add this for debugging
+          });
           // Store failed status
           const failedMatch = {
             id: matchId,
             status: 'failed',
             error: processingError.message,
-            timestamp: new Date()
+            timestamp: new Date(),
           };
           console.log('Storing failed match:', failedMatch);
           jobMatches.set(matchId, failedMatch);
@@ -454,11 +572,11 @@ app.post('/api/match', async (req, res) => {
       } catch (error) {
         console.error('Match endpoint error:', {
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
         });
         return res.status(500).json({
           error: 'An error occurred during job matching',
-          details: error.message
+          details: error.message,
         });
       }
     });
@@ -466,7 +584,7 @@ app.post('/api/match', async (req, res) => {
     console.error('Outer try-catch error:', error);
     return res.status(500).json({
       error: 'An unexpected error occurred',
-      details: error.message
+      details: error.message,
     });
   }
 });
@@ -561,11 +679,11 @@ app.patch('/api/returns/:id', (req, res) => {
 // Job application routes
 app.post('/api/applications/start', async (req, res) => {
   try {
-    upload(req, res, async function(err) {
+    upload(req, res, async function (err) {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      
+
       const { jobUrl } = req.body;
       const resumeFile = req.file;
 
@@ -644,16 +762,16 @@ app.use((err, req, res, next) => {
 // Update the optimization endpoint
 app.post('/api/optimize-resume', async (req, res) => {
   try {
-    upload(req, res, async function(err) {
+    upload(req, res, async function (err) {
       if (err instanceof multer.MulterError) {
         return res.status(400).json({
           error: 'File upload error',
-          details: err.message
+          details: err.message,
         });
       } else if (err) {
         return res.status(500).json({
           error: 'Unknown error occurred during file upload',
-          details: err.message
+          details: err.message,
         });
       }
 
@@ -663,14 +781,14 @@ app.post('/api/optimize-resume', async (req, res) => {
 
         if (!userId) {
           return res.status(400).json({
-            error: 'User ID is required'
+            error: 'User ID is required',
           });
         }
 
         // Input validation
         if (!uploadedFile) {
           return res.status(400).json({
-            error: 'Resume file is required'
+            error: 'Resume file is required',
           });
         }
 
@@ -685,17 +803,20 @@ app.post('/api/optimize-resume', async (req, res) => {
           startedAt: new Date().toISOString(),
           resumeContent: uploadedFile.buffer.toString('base64'),
           error: null,
-          progress: 0
+          progress: 0,
         };
 
         // Save to Realtime Database
         try {
-          await set(dbRef(database, `optimizations/${userId}/${optimizeId}`), resumeData);
+          await set(
+            dbRef(database, `optimizations/${userId}/${optimizeId}`),
+            resumeData
+          );
         } catch (dbError) {
           console.error('Database operation failed:', dbError);
           return res.status(500).json({
             error: 'Failed to save optimization data',
-            details: dbError.message
+            details: dbError.message,
           });
         }
 
@@ -704,27 +825,37 @@ app.post('/api/optimize-resume', async (req, res) => {
           try {
             const updateProgress = async (progress) => {
               try {
-                await set(dbRef(database, `optimizations/${userId}/${optimizeId}/progress`), progress);
+                await set(
+                  dbRef(
+                    database,
+                    `optimizations/${userId}/${optimizeId}/progress`
+                  ),
+                  progress
+                );
               } catch (error) {
                 console.error('Error updating progress:', error);
               }
             };
 
             await updateProgress(20);
-            const jobDescriptionText = resumeData.jobUrl 
+            const jobDescriptionText = resumeData.jobUrl
               ? await extractJobDescription(resumeData.jobUrl)
               : resumeData.jobDescription;
-            
+
             if (!jobDescriptionText) {
               throw new Error('No job description provided');
             }
-            
+
             await updateProgress(40);
             const resumeText = await extractResumeText(uploadedFile.buffer);
-            
+
             await updateProgress(60);
-            const optimized = await generateOptimizedResume(jobDescriptionText, resumeText, userId);
-            
+            const optimized = await generateOptimizedResume(
+              jobDescriptionText,
+              resumeText,
+              userId
+            );
+
             await updateProgress(80);
             const pdfBuffer = await generateResumePDF(optimized);
 
@@ -737,11 +868,13 @@ app.post('/api/optimize-resume', async (req, res) => {
               originalResume: resumeData.resumeContent,
               startedAt: resumeData.startedAt,
               completedAt: new Date().toISOString(),
-              progress: 100
+              progress: 100,
             };
 
-            await set(dbRef(database, `optimizations/${userId}/${optimizeId}`), completedData);
-
+            await set(
+              dbRef(database, `optimizations/${userId}/${optimizeId}`),
+              completedData
+            );
           } catch (error) {
             console.error('Optimization processing error:', error);
             const failedData = {
@@ -753,10 +886,13 @@ app.post('/api/optimize-resume', async (req, res) => {
               originalResume: resumeData.resumeContent,
               startedAt: resumeData.startedAt,
               progress: 0,
-              userId: userId
+              userId: userId,
             };
-            
-            await set(dbRef(database, `optimizations/${userId}/${optimizeId}`), failedData);
+
+            await set(
+              dbRef(database, `optimizations/${userId}/${optimizeId}`),
+              failedData
+            );
           }
         })();
 
@@ -765,22 +901,21 @@ app.post('/api/optimize-resume', async (req, res) => {
           optimizeId,
           status: 'processing',
           message: 'Resume optimization started',
-          statusEndpoint: `/api/optimize-resume/${optimizeId}`
+          statusEndpoint: `/api/optimize-resume/${optimizeId}`,
         });
-
       } catch (error) {
         console.error('Error in optimize-resume endpoint:', error);
-        res.status(500).json({ 
+        res.status(500).json({
           error: 'Internal server error',
-          message: error.message
+          message: error.message,
         });
       }
     });
   } catch (error) {
     console.error('Error in optimize-resume endpoint:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -795,8 +930,10 @@ app.get('/api/optimize-resume/:id', async (req, res) => {
       return res.status(400).json({ error: 'User ID is required' });
     }
 
-    const dbSnapshot = await get(child(dbRef(database), `optimizations/${userId}/${id}`));
-    
+    const dbSnapshot = await get(
+      child(dbRef(database), `optimizations/${userId}/${id}`)
+    );
+
     if (!dbSnapshot.exists()) {
       return res.status(404).json({ error: 'Optimization not found' });
     }
@@ -806,11 +943,71 @@ app.get('/api/optimize-resume/:id', async (req, res) => {
       status: data.status,
       progress: data.progress,
       completedAt: data.completedAt,
-      error: data.error
+      error: data.error,
     });
-
   } catch (error) {
     console.error('Error fetching optimization status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update the file serving endpoint to use the same validation
+app.get('/api/optimize-resume/:id/file', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const dbSnapshot = await get(
+      child(dbRef(database), `optimizations/${userId}/${id}`)
+    );
+
+    if (!dbSnapshot.exists()) {
+      return res.status(404).json({ error: 'Optimization not found' });
+    }
+
+    const data = dbSnapshot.val();
+
+    if (data.status !== 'completed' || !data.optimizedResume) {
+      return res.status(404).json({ error: 'Optimized resume not found' });
+    }
+
+    try {
+      // Convert base64 to buffer
+      const pdfBuffer = Buffer.from(data.optimizedResume, 'base64');
+
+      // Validate the PDF header
+      const header = pdfBuffer.subarray(0, 4).toString('ascii');
+      if (header !== '%PDF') {
+        console.error('Invalid PDF data in database:', header);
+        return res.status(500).json({ error: 'Invalid PDF data' });
+      }
+
+      // Set response headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename="optimized_resume.pdf"'
+      );
+      res.setHeader('Content-Length', pdfBuffer.length);
+      res.setHeader(
+        'Cache-Control',
+        'private, no-cache, no-store, must-revalidate'
+      );
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+
+      // Send the PDF
+      res.send(pdfBuffer);
+    } catch (conversionError) {
+      console.error('Error processing PDF:', conversionError);
+      return res.status(500).json({ error: 'Failed to process PDF' });
+    }
+  } catch (error) {
+    console.error('Error serving PDF file:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -821,120 +1018,118 @@ async function generateOptimizedResume(jobDescription, resumeText, userId) {
       throw new Error('User ID is required for resume optimization');
     }
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an expert resume optimization specialist with years of experience in HR and recruitment. 
-          Your task is to analyze the provided resume and job description, then generate an optimized version of the resume 
-          that better aligns with the job requirements while maintaining truthfulness and authenticity. Return only the raw HTML content for the body section, excluding the <html>, <head>, and <body> tags.`
-        },
-        {
-          role: 'user',
-          content: `Job Description:\n${jobDescription}\n\nOriginal Resume:\n${resumeText}\n\n
-          Please optimize this resume for the job description by:
-          1. Identifying key requirements and skills from the job description
-          2. Highlighting relevant experience and skills from the resume that match these requirements
-          3. Suggesting improvements to wording and formatting
-          4. Adding any missing relevant skills or experiences from the original resume
-          5. Maintaining all truthful information - do not fabricate or exaggerate
-          
-          Return the optimized resume content in clean, properly formatted HTML that maintains professional styling. Exclude the <html>, <head>, and <body> tags.`
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
-      user: userId // Include userId in the API call
+    const chatSession = model.startChat({
+      generationConfig,
+      history: [],
     });
 
-    const optimizedContent = response.choices[0].message.content;
+    const prompt = `You are an expert resume optimization specialist with years of experience in HR and recruitment. 
+          Your task is to analyze the provided resume and job description, then generate an optimized version of the resume 
+          that better aligns with the job requirements while maintaining truthfulness and authenticity. Return only the raw HTML content for the body section, excluding the <html>, <head>, and <body> tags.
+
+      Job Description:
+      ${jobDescription}
+
+      Original Resume:
+      ${resumeText}
+
+      Please optimize this resume for the job description by:
+      1. Identifying key requirements and skills from the job description
+      2. Highlighting relevant experience and skills from the resume that match these requirements
+      3. Suggesting improvements to wording and formatting
+      4. Adding any missing relevant skills or experiences from the original resume
+      5. Maintaining all truthful information - do not fabricate or exaggerate
+
+      Return the optimized resume content in clean, properly formatted HTML that maintains professional styling. Exclude the <html>, <head>, and <body> tags.`;
+
+    const result = await chatSession.sendMessage(prompt);
+    const optimizedContent = result.response.text();
 
     // Generate the complete HTML document with userId embedded in multiple places
     const completeHtml = `
-<!DOCTYPE html>
-<html lang="en" data-user-id="${userId}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="userId" content="${userId}">
-    <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            color: #333;
-        }
+      <!DOCTYPE html>
+      <html lang="en" data-user-id="${userId}">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta name="userId" content="${userId}">
+          <style>
+              body {
+                  font-family: system-ui, -apple-system, sans-serif;
+                  line-height: 1.6;
+                  max-width: 800px;
+                  margin: 0 auto;
+                  padding: 20px;
+                  color: #333;
+              }
 
-        .name {
-            font-size: 24px;
-            color: #2f4f4f;
-            text-align: center;
-            margin-bottom: 15px;
-        }
+              .name {
+                  font-size: 24px;
+                  color: #2f4f4f;
+                  text-align: center;
+                  margin-bottom: 15px;
+              }
 
-        .contact-info {
-            text-align: center;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
+              .contact-info {
+                  text-align: center;
+                  margin-bottom: 25px;
+                  font-size: 14px;
+              }
 
-        .contact-info a {
-            color: #800000;
-            text-decoration: none;
-        }
+              .contact-info a {
+                  color: #800000;
+                  text-decoration: none;
+              }
 
-        .section-title {
-            font-size: 16px;
-            color: #2f4f4f;
-            border-bottom: 1px solid #ccc;
-            margin: 20px 0 15px 0;
-            padding-bottom: 5px;
-        }
+              .section-title {
+                  font-size: 16px;
+                  color: #2f4f4f;
+                  border-bottom: 1px solid #ccc;
+                  margin: 20px 0 15px 0;
+                  padding-bottom: 5px;
+              }
 
-        .job-title {
-            font-weight: normal;
-            margin: 15px 0 5px 0;
-        }
+              .job-title {
+                  font-weight: normal;
+                  margin: 15px 0 5px 0;
+              }
 
-        .job-meta {
-            color: #666;
-            font-style: italic;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
+              .job-meta {
+                  color: #666;
+                  font-style: italic;
+                  margin-bottom: 10px;
+                  font-size: 14px;
+              }
 
-        .experience-item ul {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
+              .experience-item ul {
+                  margin: 10px 0;
+                  padding-left: 20px;
+              }
 
-        .experience-item li {
-            margin-bottom: 8px;
-            color: #444;
-        }
+              .experience-item li {
+                  margin-bottom: 8px;
+                  color: #444;
+              }
 
-        .education-item {
-            margin-bottom: 15px;
-        }
+              .education-item {
+                  margin-bottom: 15px;
+              }
 
-        .education-item .date {
-            color: #666;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body data-user-id="${userId}">
-    <div id="resume-content" 
-         class="resume-container" 
-         data-user-id="${userId}"
-         data-timestamp="${Date.now()}">
-        ${optimizedContent}
-    </div>
-</body>
-</html>`;
+              .education-item .date {
+                  color: #666;
+                  font-size: 14px;
+              }
+          </style>
+      </head>
+      <body data-user-id="${userId}">
+          <div id="resume-content" 
+              class="resume-container" 
+              data-user-id="${userId}"
+              data-timestamp="${Date.now()}">
+              ${optimizedContent}
+          </div>
+      </body>
+      </html>`;
 
     return completeHtml;
   } catch (error) {

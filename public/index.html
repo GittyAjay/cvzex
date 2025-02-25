@@ -1,357 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.tailwindcss.com"></script>
     <title>cvzex - My Resumes</title>
-</head>
-<body class="bg-gray-50">
-    <!-- Login Modal -->
-    <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 w-[480px]">
-            <h2 class="text-3xl font-semibold text-gray-900 mb-8">Login</h2>
-            
-            <form class="space-y-6" id="loginForm">
-                <div>
-                    <label class="block text-gray-600 mb-2">
-                        <span class="flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                            </svg>
-                            Email
-                        </span>
-                    </label>
-                    <input type="email" id="loginEmail" name="email" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-600 mb-2">
-                        <span class="flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                            </svg>
-                            Password
-                        </span>
-                    </label>
-                    <div class="relative">
-                        <input type="password" id="loginPassword" name="password" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
-                        <button type="button" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600">Show</button>
-                    </div>
-                    <a href="#" class="block text-purple-600 hover:text-purple-700 mt-2">Forgot password?</a>
-                </div>
-
-                <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:from-purple-700 hover:to-purple-900">
-                    Login
-                </button>
-            </form>
-
-            <p class="text-center mt-6">
-                <a href="#" class="text-gray-600 hover:text-gray-800">Create account</a>
-            </p>
-        </div>
-    </div>
-
-    <!-- Signup Modal -->
-    <div id="signupModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-8 w-[480px]">
-            <h2 class="text-3xl font-semibold text-gray-900 mb-8">Create account</h2>
-            
-            <form class="space-y-6" id="signupForm">
-                <div>
-                    <label class="block text-gray-600 mb-2">
-                        <span class="flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                            </svg>
-                            Email
-                        </span>
-                    </label>
-                    <input type="email" id="signupEmail" name="email" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-600 mb-2">
-                        <span class="flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                            </svg>
-                            Password
-                        </span>
-                    </label>
-                    <div class="relative">
-                        <input type="password" id="signupPassword" name="password" class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-500">
-                        <button type="button" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600">Show</button>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" id="updates" class="rounded border-gray-300 text-purple-600">
-                    <label for="updates" class="text-gray-600">Get cvzex updates. No spam ever.</label>
-                </div>
-
-                <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:from-purple-700 hover:to-purple-900">
-                    Signup
-                </button>
-            </form>
-
-            <div class="text-center mt-6 text-sm text-gray-600">
-                <p>By creating an account, you agree to our <a href="#" class="text-purple-600 hover:text-purple-700">Terms of Service</a>.</p>
-                <p class="mt-1">We do not sell your personal data. To learn more about how we collect, use, share and protect it please read our <a href="#" class="text-purple-600 hover:text-purple-700">Privacy Policy</a></p>
-            </div>
-
-            <p class="text-center mt-6">
-                Already have an account? <a href="#" class="text-purple-600 hover:text-purple-700" id="switchToLogin">Login</a>
-            </p>
-        </div>
-    </div>
-
+  </head>
+  <body class="bg-gray-50">
     <div class="flex min-h-screen">
-        <!-- Sidebar -->
-        <div class="w-64 bg-white border-r border-gray-200 p-6">
-            <div class="mb-12">
-                <img src="/api/placeholder/32/32" alt="cvzex Logo" class="h-8">
-            </div>
-            
-            <!-- Navigation -->
-            <nav class="space-y-2">
-                <div class="text-purple-700 bg-purple-50 py-2 px-4 rounded-lg font-medium">
-                    Resume
-                </div>
-                <div class="text-gray-700 py-2 px-4 hover:bg-gray-50 rounded-lg">
-                    Cover Letter
-                </div>
-                <div class="text-gray-700 py-2 px-4 hover:bg-gray-50 rounded-lg">
-                    Job Tracker
-                </div>
-                <div class="text-gray-700 py-2 px-4 hover:bg-gray-50 rounded-lg mt-6">
-                    More
-                </div>
-            </nav>
-
-            <!-- Auth Buttons -->
-            <div class="fixed bottom-8 left-6 w-52 space-y-3">
-                <div id="userInfo" class="hidden">
-                    <p class="text-sm text-gray-600 mb-2"></p>
-                    <button id="signOutBtn" class="w-full py-2.5 px-4 border border-gray-200 rounded-lg text-gray-700 bg-white hover:bg-gray-50">
-                        Sign Out
-                    </button>
-                </div>
-                <div id="authButtons">
-                    <button id="loginBtn" class="w-full py-2.5 px-4 border border-gray-200 rounded-lg text-gray-700 bg-white hover:bg-gray-50">
-                        Login
-                    </button>
-                    <button id="signupBtn" class="w-full py-2.5 px-4 bg-purple-700 text-white rounded-lg hover:bg-purple-800 mt-3">
-                        Signup
-                    </button>
-                </div>
-            </div>
+      <!-- Sidebar -->
+      <div class="w-64 bg-white border-r border-gray-200 p-6">
+        <div class="mb-12">
+          <img src="/api/placeholder/32/32" alt="cvzex Logo" class="h-8" />
         </div>
 
-        <!-- Main Content -->
-        <div class="flex-1 p-8">
-            <h1 class="text-2xl font-bold text-gray-900 mb-8">My Resumes</h1>
-            
-            <div class="grid grid-cols-2 gap-8">
-                <!-- New Resume Card -->
-                <div onclick="window.location.href='createResume.html'" class="border-2 border-dashed border-gray-200 rounded-xl bg-white p-6 h-72 flex items-center justify-center cursor-pointer hover:border-gray-300 transition-colors">
-                    <div class="text-center">
-                        <div class="text-4xl text-gray-400 mb-2">+</div>
-                        <div class="text-gray-500">New resume</div>
-                    </div>
-                </div>
+        <!-- Navigation -->
+        <nav class="space-y-2">
+          <div
+            class="text-purple-700 bg-purple-50 py-2 px-4 rounded-lg font-medium"
+          >
+            Resume
+          </div>
+          <div class="text-gray-700 py-2 px-4 hover:bg-gray-50 rounded-lg">
+            Cover Letter
+          </div>
+          <div class="text-gray-700 py-2 px-4 hover:bg-gray-50 rounded-lg">
+            Job Tracker
+          </div>
+          <div class="text-gray-700 py-2 px-4 hover:bg-gray-50 rounded-lg mt-6">
+            More
+          </div>
+        </nav>
 
-                <!-- Existing Resume Card -->
-                <div class="bg-white rounded-xl p-6 h-72">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-gray-900 font-medium">Resume 1</h3>
-                            <p class="text-sm text-gray-500 mt-1">edited a few secs ago • A4</p>
-                        </div>
-                        <button class="text-gray-400 hover:text-gray-600 p-1">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <!-- Auth Buttons -->
+        <div class="fixed bottom-8 left-6 w-52 space-y-3">
+          <div id="userInfo" class="hidden">
+            <p class="text-sm text-gray-600 mb-2"></p>
+            <button
+              id="signOutBtn"
+              class="w-full py-2.5 px-4 border border-gray-200 rounded-lg text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Sign Out
+            </button>
+          </div>
+          <div id="authButtons">
+            <button
+              id="loginBtn"
+              class="w-full py-2.5 px-4 border border-gray-200 rounded-lg text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Login
+            </button>
+            <button
+              id="signupBtn"
+              class="w-full py-2.5 px-4 bg-purple-700 text-white rounded-lg hover:bg-purple-800 mt-3"
+            >
+              Signup
+            </button>
+          </div>
         </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="flex-1 p-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-8">My Resumes</h1>
+
+        <div class="grid grid-cols-2 gap-8">
+          <!-- New Resume Card -->
+          <div
+            onclick="window.location.href='createResume.html'"
+            class="border-2 border-dashed border-gray-200 rounded-xl bg-white p-6 h-72 flex items-center justify-center cursor-pointer hover:border-gray-300 transition-colors"
+          >
+            <div class="text-center">
+              <div class="text-4xl text-gray-400 mb-2">+</div>
+              <div class="text-gray-500">New resume</div>
+            </div>
+          </div>
+
+          <!-- Existing Resume Card -->
+          <div class="bg-white rounded-xl p-6 h-72">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="text-gray-900 font-medium">Resume 1</h3>
+                <p class="text-sm text-gray-500 mt-1">
+                  edited a few secs ago • A4
+                </p>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600 p-1">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Add this script before closing body tag -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-      import { 
-        getAuth, 
-        createUserWithEmailAndPassword,
-        signInWithEmailAndPassword,
-        onAuthStateChanged,
-        signOut 
-      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    <!-- Add this right before the closing body tag, after the existing script -->
+    <!-- Auth Modals -->
+    <div
+      id="loginModal"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-8 rounded-lg shadow-lg w-96"
+        onclick="event.stopPropagation()"
+      >
+        <h2 class="text-2xl font-bold mb-6">Login</h2>
+        <button
+          onclick="signInWithGoogle()"
+          class="w-full py-2.5 px-4 border border-gray-200 rounded-lg text-gray-700 bg-white hover:bg-gray-50 flex items-center justify-center gap-2"
+        >
+          <img
+            src="https://www.google.com/favicon.ico"
+            alt="Google"
+            class="w-5 h-5"
+          />
+          Continue with Google
+        </button>
+      </div>
+    </div>
 
-      // Your Firebase configuration
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+      import {
+        getAuth,
+        GoogleAuthProvider,
+        signInWithPopup,
+        onAuthStateChanged,
+        signOut,
+      } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+      // Firebase configuration
       const firebaseConfig = {
-        apiKey: "AIzaSyDtZ-pIMQNWwczkQM8TWH9AEsSm2bZIpEc",
-        authDomain: "cvzex-26398.firebaseapp.com",
-        projectId: "cvzex-26398",
-        storageBucket: "cvzex-26398.firebasestorage.app",
-        messagingSenderId: "231565216123",
-        appId: "1:231565216123:web:c3129e84038af0eb0fd5de",
-        measurementId: "G-NW39XRY1S0"
+        apiKey: 'AIzaSyCsAtnIni2d7ZRdi7En6qF0DyJXuiLCL9Y',
+        authDomain: 'swipmart-b9616.firebaseapp.com',
+        databaseURL: 'https://swipmart-b9616-default-rtdb.firebaseio.com',
+        projectId: 'swipmart-b9616',
+        storageBucket: 'swipmart-b9616.firebasestorage.app',
+        messagingSenderId: '159526208832',
+        appId: '1:159526208832:web:a000685804f7902964e6a5',
+        measurementId: 'G-7NN22J9KNJ',
       };
 
       // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
 
-      // Store current user ID
-      let currentUserId = null;
+      // Make auth globally available
+      window.auth = auth;
 
-      // Get modal elements
-      const loginModal = document.getElementById('loginModal');
-      const signupModal = document.getElementById('signupModal');
-      const loginButton = document.getElementById('loginBtn');
-      const signupButton = document.getElementById('signupBtn');
-      const switchToLoginLink = document.getElementById('switchToLogin');
-      const createAccountLink = document.querySelector('a[href="#"]:not(#switchToLogin)');
-
-      // Show login modal when login button is clicked
-      loginButton.addEventListener('click', () => {
-        if (!auth.currentUser) {
-          loginModal.classList.remove('hidden');
+      // Define signInWithGoogle function
+      window.signInWithGoogle = async function () {
+        try {
+          const result = await signInWithPopup(auth, provider);
+          console.log('Successfully signed in with Google:', result.user.email);
+          document.getElementById('loginModal').classList.add('hidden');
+        } catch (error) {
+          console.error('Google sign in error:', error);
+          alert('Error signing in with Google: ' + error.message);
         }
-      });
+      };
 
-      // Show signup modal when signup button is clicked
-      signupButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        signupModal.classList.remove('hidden');
-        loginModal.classList.add('hidden'); // Hide login modal if it's open
-      });
-
-      // Switch between modals
-      switchToLoginLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        signupModal.classList.add('hidden');
-        loginModal.classList.remove('hidden');
-      });
-
-      createAccountLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginModal.classList.add('hidden');
-        signupModal.classList.remove('hidden');
-      });
-
-      // Close modals when clicking outside
-      [loginModal, signupModal].forEach(modal => {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) {
-            modal.classList.add('hidden');
-          }
-        });
-      });
-
-      // Update UI based on auth state
+      // Auth state observer
       onAuthStateChanged(auth, (user) => {
         const userInfo = document.getElementById('userInfo');
         const authButtons = document.getElementById('authButtons');
-        const userInfoText = userInfo.querySelector('p');
-        
+        const userInfoText = userInfo?.querySelector('p');
+
         if (user) {
-            // User is signed in
-            currentUserId = user.uid;
+          if (userInfo && authButtons && userInfoText) {
             userInfoText.textContent = user.email;
             userInfo.classList.remove('hidden');
             authButtons.classList.add('hidden');
-            
-            // Store user ID in localStorage
-            localStorage.setItem('userId', user.uid);
-            
-            // Update URL with user ID if not present
-            const urlParams = new URLSearchParams(window.location.search);
-            if (!urlParams.has('userId')) {
-                urlParams.set('userId', user.uid);
-                const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-                window.history.replaceState({}, '', newUrl);
-            }
+          }
         } else {
-            // User is signed out
-            currentUserId = null;
+          if (userInfo && authButtons) {
             userInfo.classList.add('hidden');
             authButtons.classList.remove('hidden');
-            localStorage.removeItem('userId');
-            
-            // Redirect to home if on protected page
-            if (window.location.pathname.includes('createResume.html')) {
-                window.location.href = '/index.html';
+          }
+        }
+      });
+
+      // Event Listeners
+      document.addEventListener('DOMContentLoaded', () => {
+        const loginBtn = document.getElementById('loginBtn');
+        const signOutBtn = document.getElementById('signOutBtn');
+        const loginModal = document.getElementById('loginModal');
+
+        if (loginBtn) {
+          loginBtn.addEventListener('click', () => {
+            if (loginModal) {
+              loginModal.classList.remove('hidden');
             }
+          });
+        }
+
+        if (signOutBtn) {
+          signOutBtn.addEventListener('click', async () => {
+            try {
+              await signOut(auth);
+              console.log('User signed out');
+            } catch (error) {
+              console.error('Sign out error:', error);
+              alert('Error signing out: ' + error.message);
+            }
+          });
+        }
+
+        // Close modal when clicking outside
+        if (loginModal) {
+          loginModal.addEventListener('click', (e) => {
+            if (e.target === loginModal) {
+              loginModal.classList.add('hidden');
+            }
+          });
         }
       });
-
-      // Update sign out button handler
-      document.getElementById('signOutBtn').addEventListener('click', async () => {
-        try {
-            await signOut(auth);
-            console.log('User signed out');
-        } catch (error) {
-            console.error('Sign out error:', error);
-            alert('Error signing out: ' + error.message);
-        }
-      });
-
-      // Add error handling for modals
-      function showModalError(modal, message) {
-        const existingError = modal.querySelector('.error-message');
-        if (existingError) {
-            existingError.remove();
-        }
-
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message text-red-500 text-sm mt-4';
-        errorDiv.textContent = message;
-        modal.querySelector('form').appendChild(errorDiv);
-      }
-
-      // Update login form submission with better error handling
-      const loginForm = document.getElementById('loginForm');
-      loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitBtn = loginForm.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        
-        try {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            await signInWithEmailAndPassword(auth, email, password);
-            loginModal.classList.add('hidden');
-            loginForm.reset();
-        } catch (error) {
-            console.error('Login error:', error);
-            showModalError(loginModal, getAuthErrorMessage(error.code));
-        } finally {
-            submitBtn.disabled = false;
-        }
-      });
-
-      // Add helper function for auth error messages
-      function getAuthErrorMessage(errorCode) {
-        switch (errorCode) {
-            case 'auth/invalid-email':
-                return 'Invalid email address.';
-            case 'auth/user-not-found':
-            case 'auth/wrong-password':
-                return 'Invalid email or password.';
-            case 'auth/too-many-requests':
-                return 'Too many failed attempts. Please try again later.';
-            case 'auth/email-already-in-use':
-                return 'This email is already registered.';
-            case 'auth/weak-password':
-                return 'Password should be at least 6 characters long.';
-            default:
-                return 'An error occurred. Please try again.';
-        }
-      }
     </script>
-</body>
+  </body>
 </html>
